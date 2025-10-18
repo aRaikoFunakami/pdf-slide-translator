@@ -208,3 +208,4 @@ __marimo__/
 
 translation_cache/
 *.pdf
+.DS_Store

@@ -21,6 +21,12 @@ def parse_args():
     parser.add_argument(
         "-c", action="store_true", help="キャッシュを利用する（テスト用）"
     )
+    parser.add_argument(
+        "-m", "--model", help="AIモデル名（例: gpt-4.1-mini, gpt-oss:20b）"
+    )
+    parser.add_argument(
+        "-u", "--baseurl", help="OPENAI_BASEURL（OSSモデル使用時）"
+    )
     return parser.parse_args()
 
 
@@ -32,6 +38,18 @@ def main():
     3. 翻訳文をFreeTextアノテーションで重ねて出力
     """
     args = parse_args()
+    
+    # AIモデルとBASEURLの設定
+    if args.model:
+        os.environ["OPENAI_MODEL"] = args.model
+    
+    if args.baseurl:
+        os.environ["OPENAI_BASEURL"] = args.baseurl
+    elif args.model and ("oss" in args.model.lower() or "local" in args.model.lower()):
+        # OSSモデルでBASEURLが指定されていない場合のデフォルト値
+        if not os.getenv("OPENAI_BASEURL"):
+            os.environ["OPENAI_BASEURL"] = "http://localhost:11434/v1"
+    
     BASE_PDF = args.input
     # 出力ファイル名決定
     if args.output:

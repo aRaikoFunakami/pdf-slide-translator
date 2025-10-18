@@ -18,12 +18,30 @@ if not os.getenv("OPENAI_API_KEY"):
     sys.exit(1)
 
 # openai api を利用する場合の設定
-OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
-OPENAI_BASEURL = ""
+# モデル設定は動的に取得するため、ここでは設定しない
 
 # local LLMサーバー利用時の例
 # OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-oss:20b")
 # OPENAI_BASEURL = os.getenv("OPENAI_BASEURL", "http://localhost:11434/v1")
+
+
+def get_model_config():
+    """
+    現在の環境変数からモデル設定を取得する
+    """
+    model = os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
+    
+    # OSSモデルかどうかを判定してBASEURLを設定
+    if "oss" in model.lower() or "local" in model.lower():
+        baseurl = os.getenv("OPENAI_BASEURL", "http://localhost:11434/v1")
+    else:
+        baseurl = os.getenv("OPENAI_BASEURL", "")
+    
+    print(f"Using OPENAI_MODEL: {model}")
+    if baseurl:
+        print(f"Using OPENAI_BASEURL: {baseurl}")
+    
+    return model, baseurl
 
 
 def extract_spans(pdf_path: str) -> List[Dict[str, Any]]:
@@ -156,10 +174,13 @@ async def translate_spans_openai_async(spans, target_lang="en"):
 
     parser = JsonOutputParser(pydantic_object=TranslationResult)
 
-    if not OPENAI_BASEURL:
-        model = ChatOpenAI(temperature=0, model=OPENAI_MODEL)
+    # モデル設定を動的に取得
+    openai_model, openai_baseurl = get_model_config()
+
+    if openai_baseurl:
+        model = ChatOpenAI(temperature=0, model=openai_model, openai_api_base=openai_baseurl)
     else:
-        model = ChatOpenAI(temperature=0, model=OPENAI_MODEL, openai_api_base=OPENAI_BASEURL)
+        model = ChatOpenAI(temperature=0, model=openai_model)
 
     batch_size = 10
     all_translations = []
