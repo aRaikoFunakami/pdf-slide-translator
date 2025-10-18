@@ -18,12 +18,12 @@ if not os.getenv("OPENAI_API_KEY"):
     sys.exit(1)
 
 # openai api を利用する場合の設定
-#OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
-#OPENAI_BASEURL = ""
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
+OPENAI_BASEURL = ""
 
 # local LLMサーバー利用時の例
-OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-oss:20b")
-OPENAI_BASEURL = os.getenv("OPENAI_BASEURL", "http://localhost:11434/v1")
+# OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-oss:20b")
+# OPENAI_BASEURL = os.getenv("OPENAI_BASEURL", "http://localhost:11434/v1")
 
 
 def extract_spans(pdf_path: str) -> List[Dict[str, Any]]:
