@@ -1,0 +1,19 @@
+[project]
+name = "pdf"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "googletrans>=4.0.2",
+    "langchain>=0.3.0",
+    "langchain-openai>=0.3.0",
+    "openai>=2.3.0",
+    "pikepdf>=9.11.0",
+    "pymupdf>=1.26.5",
+    "pymupdf-fonts>=1.0.5",
+    "pypdf>=6.1.1",
+    "pypdf2>=3.0.1",
+    "reportlab>=4.4.4",
+    "tqdm>=4.66.0",
+]
