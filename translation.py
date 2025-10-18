@@ -11,6 +11,14 @@ from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field
 from tqdm.asyncio import tqdm
 
+# LibreTranslate対応
+try:
+    from libretranslatepy import LibreTranslateAPI
+    LIBRETRANSLATE_AVAILABLE = True
+except ImportError:
+    LIBRETRANSLATE_AVAILABLE = False
+    LibreTranslateAPI = None
+
 # OPENAI_API_KEYの存在チェック
 if not os.getenv("OPENAI_API_KEY"):
     print("エラー: OPENAI_API_KEYが設定されていません。")
@@ -30,6 +38,12 @@ def get_model_config():
     現在の環境変数からモデル設定を取得する
     """
     model = os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
+    
+    # LibreTranslateの場合
+    if model.lower() == "libre":
+        baseurl = os.getenv("OPENAI_BASEURL", "http://127.0.0.1:5001/")
+        print(f"Using LibreTranslate: {baseurl}")
+        return model, baseurl
     
     # OSSモデルかどうかを判定してBASEURLを設定
     if "oss" in model.lower() or "local" in model.lower():
@@ -159,6 +173,13 @@ async def translate_spans_openai_async(spans, target_lang="en"):
     - asyncio.gather()により、複数のチャンクが同時にスレッドで並列実行されます。
     - PythonのThreadPoolExecutorの最大スレッド数（デフォルト: min(32, os.cpu_count() + 4)）まで同時実行され、それ以上は順次処理されます。
     """
+    
+    # モデル設定を取得してLibreTranslateかどうかを判定
+    openai_model, openai_baseurl = get_model_config()
+    
+    # LibreTranslateの場合は専用関数を呼び出し
+    if openai_model.lower() == "libre":
+        return await translate_spans_libretranslate_async(spans, target_lang, openai_baseurl)
 
     if not spans:
         return [""] * len(spans)
@@ -239,3 +260,55 @@ async def translate_spans_openai_async(spans, target_lang="en"):
     for chunk_result in results:
         all_translations.extend(chunk_result)
     return all_translations
+
+
+async def translate_spans_libretranslate_async(spans, target_lang="en", baseurl="http://127.0.0.1:5001/"):
+    """
+    LibreTranslate APIでPDFテキストspanリストを翻訳する（非同期版）。
+    spans: span辞書リスト
+    target_lang: 'en' or 'ja'
+    baseurl: LibreTranslateサーバーのURL
+    戻り値: 翻訳文リスト（元spansと同じ順）
+    """
+    if not LIBRETRANSLATE_AVAILABLE:
+        print("エラー: libretranslatepyがインストールされていません。")
+        print("pip install libretranslate-py でインストールしてください。")
+        return [""] * len(spans)
+    
+    if not spans:
+        return [""] * len(spans)
+
+    try:
+        lt = LibreTranslateAPI(baseurl)
+        
+        # 言語検出とマッピング
+        source_lang = "ja" if target_lang == "en" else "en"
+        
+        all_translations = []
+        
+        # 進捗バーを使って翻訳
+        with tqdm(total=len(spans), desc="翻訳中 (LibreTranslate)", unit="spans") as pbar:
+            for span in spans:
+                text = span.get("text", "").strip()
+                if not text:
+                    all_translations.append("")
+                    pbar.update(1)
+                    continue
+                
+                try:
+                    # LibreTranslateで翻訳実行
+                    translated = lt.translate(text, source_lang, target_lang)
+                    print(f"[DEBUG] LibreTranslate翻訳: {text} -> {translated}")
+                    all_translations.append(translated)
+                except Exception as e:
+                    print(f"[ERROR] LibreTranslate翻訳エラー: {e}")
+                    all_translations.append(text)  # 元のテキストをそのまま使用
+                
+                pbar.update(1)
+        
+        return all_translations
+        
+    except Exception as e:
+        print(f"[ERROR] LibreTranslate接続エラー: {e}")
+        print(f"LibreTranslateサーバー ({baseurl}) が起動していることを確認してください。")
+        return [""] * len(spans)

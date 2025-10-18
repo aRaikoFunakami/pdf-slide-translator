@@ -360,6 +360,15 @@ wheels = [
 ]
 
 [[package]]
+name = "libretranslatepy"
+version = "2.1.4"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/ad/d3/dd02a586e021d088c8de7eba641dedca54f71ca81c913e390d2f45068c2c/libretranslatepy-2.1.4.tar.gz", hash = "sha256:800e902eed1b8b32d310ec72b204c6cfdcf3e4aa7cda5bfbcb7bbce8933e6369", size = 3446, upload-time = "2024-04-16T21:48:06.256Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/16/d0/02e0d5c591bdb6cb8431c94b26f5b62e4b1a3b8f72eec35f18f82ecd10b2/libretranslatepy-2.1.4-py3-none-any.whl", hash = "sha256:84fd16181e021e87c2d34351d928c01d66dba36e01814500aee8731dd138b822", size = 3525, upload-time = "2024-04-16T21:48:02.188Z" },
+]
+
+[[package]]
 name = "lxml"
 version = "6.0.2"
 source = { registry = "https://pypi.org/simple" }
@@ -491,6 +500,7 @@ dependencies = [
     { name = "googletrans" },
     { name = "langchain" },
     { name = "langchain-openai" },
+    { name = "libretranslatepy" },
     { name = "openai" },
     { name = "pikepdf" },
     { name = "pymupdf" },
@@ -506,6 +516,7 @@ requires-dist = [
     { name = "googletrans", specifier = ">=4.0.2" },
     { name = "langchain", specifier = ">=0.3.0" },
     { name = "langchain-openai", specifier = ">=0.3.0" },
+    { name = "libretranslatepy", specifier = ">=2.1.4" },
     { name = "openai", specifier = ">=2.3.0" },
     { name = "pikepdf", specifier = ">=9.11.0" },
     { name = "pymupdf", specifier = ">=1.26.5" },

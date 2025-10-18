@@ -8,6 +8,7 @@ dependencies = [
     "googletrans>=4.0.2",
     "langchain>=0.3.0",
     "langchain-openai>=0.3.0",
+    "libretranslatepy>=2.1.4",
     "openai>=2.3.0",
     "pikepdf>=9.11.0",
     "pymupdf>=1.26.5",

@@ -22,10 +22,10 @@ def parse_args():
         "-c", action="store_true", help="キャッシュを利用する（テスト用）"
     )
     parser.add_argument(
-        "-m", "--model", help="AIモデル名（例: gpt-4.1-mini, gpt-oss:20b）"
+        "-m", "--model", help="AIモデル名（例: gpt-4.1-mini, gpt-oss:20b, libre）"
     )
     parser.add_argument(
-        "-u", "--baseurl", help="OPENAI_BASEURL（OSSモデル使用時）"
+        "-u", "--baseurl", help="OPENAI_BASEURL（OSSモデル使用時）または LibreTranslate URL"
     )
     return parser.parse_args()
 
@@ -45,6 +45,10 @@ def main():
     
     if args.baseurl:
         os.environ["OPENAI_BASEURL"] = args.baseurl
+    elif args.model and args.model.lower() == "libre":
+        # LibreTranslateでBASEURLが指定されていない場合のデフォルト値
+        if not os.getenv("OPENAI_BASEURL"):
+            os.environ["OPENAI_BASEURL"] = "http://127.0.0.1:5001/"
     elif args.model and ("oss" in args.model.lower() or "local" in args.model.lower()):
         # OSSモデルでBASEURLが指定されていない場合のデフォルト値
         if not os.getenv("OPENAI_BASEURL"):
