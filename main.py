@@ -22,10 +22,10 @@ def parse_args():
         "-c", action="store_true", help="キャッシュを利用する（テスト用）"
     )
     parser.add_argument(
-        "-m", "--model", help="AIモデル名（例: gpt-4.1-mini, gpt-oss:20b, libre）"
+        "-m", "--model", help="AIモデル名（例: gpt-4.1-mini, gpt-oss:20b, libre, ltengine）"
     )
     parser.add_argument(
-        "-u", "--baseurl", help="OPENAI_BASEURL（OSSモデル使用時）または LibreTranslate URL"
+        "-u", "--baseurl", help="OPENAI_BASEURL（OSSモデル使用時）または LibreTranslate/LTEngine URL"
     )
     return parser.parse_args()
 
@@ -49,7 +49,11 @@ def main():
         # LibreTranslateでBASEURLが指定されていない場合のデフォルト値
         if not os.getenv("OPENAI_BASEURL"):
             os.environ["OPENAI_BASEURL"] = "http://127.0.0.1:5001/"
-    elif args.model and ("oss" in args.model.lower() or "local" in args.model.lower()):
+    elif args.model and args.model.lower() == "ltengine":
+        # LTEngineでBASEURLが指定されていない場合のデフォルト値
+        if not os.getenv("OPENAI_BASEURL"):
+            os.environ["OPENAI_BASEURL"] = "http://127.0.0.1:5050/"
+    elif args.model and ("oss" in args.model.lower() or "local" in args.model.lower() or "gemma" in args.model.lower()):
         # OSSモデルでBASEURLが指定されていない場合のデフォルト値
         if not os.getenv("OPENAI_BASEURL"):
             os.environ["OPENAI_BASEURL"] = "http://localhost:11434/v1"

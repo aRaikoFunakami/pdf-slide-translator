@@ -45,6 +45,12 @@ def get_model_config():
         print(f"Using LibreTranslate: {baseurl}")
         return model, baseurl
     
+    # LTEngineの場合
+    if model.lower() == "ltengine":
+        baseurl = os.getenv("OPENAI_BASEURL", "http://127.0.0.1:5050/")
+        print(f"Using LTEngine: {baseurl}")
+        return model, baseurl
+    
     # OSSモデルかどうかを判定してBASEURLを設定
     if "oss" in model.lower() or "local" in model.lower():
         baseurl = os.getenv("OPENAI_BASEURL", "http://localhost:11434/v1")
@@ -177,8 +183,8 @@ async def translate_spans_openai_async(spans, target_lang="en"):
     # モデル設定を取得してLibreTranslateかどうかを判定
     openai_model, openai_baseurl = get_model_config()
     
-    # LibreTranslateの場合は専用関数を呼び出し
-    if openai_model.lower() == "libre":
+    # LibreTranslateまたはLTEngineの場合は専用関数を呼び出し
+    if openai_model.lower() in ["libre", "ltengine"]:
         return await translate_spans_libretranslate_async(spans, target_lang, openai_baseurl)
 
     if not spans:
@@ -264,10 +270,10 @@ async def translate_spans_openai_async(spans, target_lang="en"):
 
 async def translate_spans_libretranslate_async(spans, target_lang="en", baseurl="http://127.0.0.1:5001/"):
     """
-    LibreTranslate APIでPDFテキストspanリストを翻訳する（非同期版）。
+    LibreTranslate/LTEngine APIでPDFテキストspanリストを翻訳する（非同期版）。
     spans: span辞書リスト
     target_lang: 'en' or 'ja'
-    baseurl: LibreTranslateサーバーのURL
+    baseurl: LibreTranslate/LTEngineサーバーのURL
     戻り値: 翻訳文リスト（元spansと同じ順）
     """
     if not LIBRETRANSLATE_AVAILABLE:
@@ -287,7 +293,8 @@ async def translate_spans_libretranslate_async(spans, target_lang="en", baseurl=
         all_translations = []
         
         # 進捗バーを使って翻訳
-        with tqdm(total=len(spans), desc="翻訳中 (LibreTranslate)", unit="spans") as pbar:
+        engine_name = "LTEngine" if "5050" in baseurl else "LibreTranslate"
+        with tqdm(total=len(spans), desc=f"翻訳中 ({engine_name})", unit="spans") as pbar:
             for span in spans:
                 text = span.get("text", "").strip()
                 if not text:
@@ -296,12 +303,12 @@ async def translate_spans_libretranslate_async(spans, target_lang="en", baseurl=
                     continue
                 
                 try:
-                    # LibreTranslateで翻訳実行
+                    # LibreTranslate/LTEngineで翻訳実行
                     translated = lt.translate(text, source_lang, target_lang)
-                    print(f"[DEBUG] LibreTranslate翻訳: {text} -> {translated}")
+                    #print(f"[DEBUG] {engine_name}翻訳: {text} -> {translated}")
                     all_translations.append(translated)
                 except Exception as e:
-                    print(f"[ERROR] LibreTranslate翻訳エラー: {e}")
+                    print(f"[ERROR] {engine_name}翻訳エラー: {e}")
                     all_translations.append(text)  # 元のテキストをそのまま使用
                 
                 pbar.update(1)
@@ -309,6 +316,7 @@ async def translate_spans_libretranslate_async(spans, target_lang="en", baseurl=
         return all_translations
         
     except Exception as e:
-        print(f"[ERROR] LibreTranslate接続エラー: {e}")
-        print(f"LibreTranslateサーバー ({baseurl}) が起動していることを確認してください。")
+        engine_name = "LTEngine" if "5050" in baseurl else "LibreTranslate"
+        print(f"[ERROR] {engine_name}接続エラー: {e}")
+        print(f"{engine_name}サーバー ({baseurl}) が起動していることを確認してください。")
         return [""] * len(spans)
